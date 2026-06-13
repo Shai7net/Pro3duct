@@ -1,0 +1,28 @@
+{
+  "name": "pro3duct",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Interactive Digital Twin SaaS Platform",
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "test": "turbo run test",
+    "dev:frontend": "cd frontend && npm run dev",
+    "dev:backend": "cd backend && python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000",
+    "docker:up": "docker-compose up -d",
+    "docker:down": "docker-compose down",
+    "db:migrate": "cd backend && alembic upgrade head",
+    "db:seed": "cd backend && python -m app.seeds"
+  },
+  "workspaces": [
+    "frontend"
+  ],
+  "devDependencies": {
+    "turbo": "^2.4.0"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=9.0.0"
+  }
+}

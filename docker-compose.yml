@@ -1,0 +1,192 @@
+services:
+  # ── PostgreSQL ──
+  postgres:
+    image: postgres:16-alpine
+    container_name: pro3duct-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: pro3duct
+      POSTGRES_PASSWORD: pro3duct_dev
+      POSTGRES_DB: pro3duct
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pro3duct"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── Redis ──
+  redis:
+    image: redis:7-alpine
+    container_name: pro3duct-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── MinIO (S3-compatible storage) ──
+  minio:
+    image: minio/minio:latest
+    container_name: pro3duct-minio
+    restart: unless-stopped
+    environment:
+      MINIO_ROOT_USER: pro3duct_minio
+      MINIO_ROOT_PASSWORD: pro3duct_minio_secret
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio-data:/data
+    command: server /data --console-address ":9001"
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── MinIO Setup (create buckets) ──
+  minio-setup:
+    image: minio/mc:latest
+    container_name: pro3duct-minio-setup
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+      mc alias set pro3duct http://minio:9000 pro3duct_minio pro3duct_minio_secret;
+      mc mb --ignore-existing pro3duct/pro3duct-assets;
+      mc mb --ignore-existing pro3duct/pro3duct-models;
+      mc mb --ignore-existing pro3duct/pro3duct-published;
+      mc anonymous set download pro3duct/pro3duct-published;
+      echo 'MinIO buckets created successfully';
+      exit 0;
+      "
+
+  # ── Temporal Server (dev) ──
+  temporal:
+    image: temporalio/auto-setup:latest
+    container_name: pro3duct-temporal
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      - DB=postgres12
+      - DB_PORT=5432
+      - POSTGRES_USER=pro3duct
+      - POSTGRES_PWD=pro3duct_dev
+      - POSTGRES_SEEDS=postgres
+      - DEFAULT_NAMESPACE=pro3duct
+    ports:
+      - "7233:7233"
+
+  # ── Temporal Web UI ──
+  temporal-ui:
+    image: temporalio/ui:latest
+    container_name: pro3duct-temporal-ui
+    restart: unless-stopped
+    depends_on:
+      - temporal
+    environment:
+      - TEMPORAL_ADDRESS=temporal:7233
+      - TEMPORAL_CORS_ORIGINS=http://localhost:3000
+    ports:
+      - "8233:8080"
+
+  # ── Backend API Control Plane ──
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: pro3duct-backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      minio-setup:
+        condition: service_completed_successfully
+      temporal:
+        # Auto-setup might take a few moments
+        condition: service_started
+    environment:
+      - APP_NAME=Pro3duct
+      - ENVIRONMENT=development
+      - DEV_AUTO_LOGIN=true
+      - DEV_USER_EMAIL=${DEV_USER_EMAIL:-developer@pro3duct.local}
+      - DEV_USER_PASSWORD=${DEV_USER_PASSWORD:-development-only}
+      - DEV_USER_NAME=${DEV_USER_NAME:-Local Developer}
+      - DATABASE_URL=postgresql+asyncpg://pro3duct:pro3duct_dev@postgres:5432/pro3duct
+      - DATABASE_SYNC_URL=postgresql://pro3duct:pro3duct_dev@postgres:5432/pro3duct
+      - REDIS_URL=redis://redis:6379/0
+      - S3_ENDPOINT=http://minio:9000
+      - TEMPORAL_HOST=temporal:7233
+      - CORS_ORIGINS=http://localhost:3000
+      - ENCRYPTION_KEY=32_bytes_long_encryption_key_here_!!!!
+    ports:
+      - "8000:8000"
+
+  # ── Temporal General Worker ──
+  temporal-worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: pro3duct-temporal-worker
+    restart: unless-stopped
+    depends_on:
+      - backend
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://pro3duct:pro3duct_dev@postgres:5432/pro3duct
+      - DATABASE_SYNC_URL=postgresql://pro3duct:pro3duct_dev@postgres:5432/pro3duct
+      - REDIS_URL=redis://redis:6379/0
+      - S3_ENDPOINT=http://minio:9000
+      - TEMPORAL_HOST=temporal:7233
+      - ENCRYPTION_KEY=32_bytes_long_encryption_key_here_!!!!
+    command: python -m app.workflows.worker
+
+  # ── Blender Headless Worker ──
+  blender-worker:
+    build:
+      context: .
+      dockerfile: workers/blender/Dockerfile
+    container_name: pro3duct-blender-worker
+    restart: unless-stopped
+    depends_on:
+      - backend
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://pro3duct:pro3duct_dev@postgres:5432/pro3duct
+      - DATABASE_SYNC_URL=postgresql://pro3duct:pro3duct_dev@postgres:5432/pro3duct
+      - REDIS_URL=redis://redis:6379/0
+      - S3_ENDPOINT=http://minio:9000
+      - TEMPORAL_HOST=temporal:7233
+      - ENCRYPTION_KEY=32_bytes_long_encryption_key_here_!!!!
+      - BLENDER_PATH=blender
+
+  # ── Frontend Next.js ──
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: pro3duct-frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1
+    ports:
+      - "3000:3000"
+
+volumes:
+  postgres-data:
+  redis-data:
+  minio-data:

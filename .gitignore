@@ -1,0 +1,74 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+dist/
+build/
+*.egg
+.eggs/
+venv/
+env/
+.venv/
+
+# Next.js
+.next/
+out/
+
+# Build
+*.tsbuildinfo
+
+# Environment
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# Testing
+coverage/
+.coverage
+htmlcov/
+.pytest_cache/
+
+# Docker
+docker-compose.override.yml
+
+# MinIO data
+minio-data/
+
+# Temporal
+temporal-data/
+
+# Blender
+*.blend1
+*.blend2
+
+# Turbo
+.turbo/
+
+# Generated
+*.glb
+*.usdz
+uploads/
+generated/
+.pro3duct-app-profile/

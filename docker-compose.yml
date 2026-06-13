@@ -121,6 +121,8 @@ services:
         condition: service_started
     environment:
       - APP_NAME=Pro3duct
+      - APP_URL=http://localhost:3000
+      - API_URL=http://localhost:8000
       - ENVIRONMENT=development
       - DEV_AUTO_LOGIN=true
       - DEV_USER_EMAIL=${DEV_USER_EMAIL:-developer@pro3duct.local}
@@ -130,9 +132,13 @@ services:
       - DATABASE_SYNC_URL=postgresql://pro3duct:pro3duct_dev@postgres:5432/pro3duct
       - REDIS_URL=redis://redis:6379/0
       - S3_ENDPOINT=http://minio:9000
+      - S3_PUBLIC_ENDPOINT=http://localhost:9000
       - TEMPORAL_HOST=temporal:7233
       - CORS_ORIGINS=http://localhost:3000
       - ENCRYPTION_KEY=32_bytes_long_encryption_key_here_!!!!
+      - MESHY_API_KEY=${MESHY_API_KEY:-}
+      - MESHY_API_URL=${MESHY_API_URL:-https://api.meshy.ai}
+      - ALLOW_DEMO_GENERATION=${ALLOW_DEMO_GENERATION:-false}
     ports:
       - "8000:8000"
 
@@ -150,8 +156,12 @@ services:
       - DATABASE_SYNC_URL=postgresql://pro3duct:pro3duct_dev@postgres:5432/pro3duct
       - REDIS_URL=redis://redis:6379/0
       - S3_ENDPOINT=http://minio:9000
+      - S3_PUBLIC_ENDPOINT=http://localhost:9000
       - TEMPORAL_HOST=temporal:7233
       - ENCRYPTION_KEY=32_bytes_long_encryption_key_here_!!!!
+      - MESHY_API_KEY=${MESHY_API_KEY:-}
+      - MESHY_API_URL=${MESHY_API_URL:-https://api.meshy.ai}
+      - ALLOW_DEMO_GENERATION=${ALLOW_DEMO_GENERATION:-false}
     command: python -m app.workflows.worker
 
   # ── Blender Headless Worker ──
@@ -168,8 +178,12 @@ services:
       - DATABASE_SYNC_URL=postgresql://pro3duct:pro3duct_dev@postgres:5432/pro3duct
       - REDIS_URL=redis://redis:6379/0
       - S3_ENDPOINT=http://minio:9000
+      - S3_PUBLIC_ENDPOINT=http://localhost:9000
       - TEMPORAL_HOST=temporal:7233
       - ENCRYPTION_KEY=32_bytes_long_encryption_key_here_!!!!
+      - MESHY_API_KEY=${MESHY_API_KEY:-}
+      - MESHY_API_URL=${MESHY_API_URL:-https://api.meshy.ai}
+      - ALLOW_DEMO_GENERATION=${ALLOW_DEMO_GENERATION:-false}
       - BLENDER_PATH=blender
 
   # ── Frontend Next.js ──

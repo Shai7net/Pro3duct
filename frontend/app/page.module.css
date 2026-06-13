@@ -1,0 +1,120 @@
+.landing {
+  min-height: 100vh;
+  padding: 0 7vw;
+  background: radial-gradient(circle at 50% 15%, rgba(139, 92, 246, 0.2), transparent 38%), #080810;
+}
+
+.nav {
+  height: 78px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.logo, .navLinks, .heroCtas {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.logoIcon {
+  color: var(--primary);
+  font-weight: 900;
+}
+
+.logoText {
+  font-size: 1.25rem;
+  font-weight: 800;
+}
+
+.navLink, .navCta, .ctaPrimary {
+  color: var(--text-primary);
+  text-decoration: none;
+  font-weight: 700;
+}
+
+.navCta, .ctaPrimary {
+  background: linear-gradient(135deg, var(--primary), #7c3aed);
+  padding: 10px 18px;
+  border-radius: var(--border-radius);
+}
+
+.hero {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 110px 0 80px;
+  text-align: center;
+}
+
+.heroBadge {
+  display: inline-block;
+  color: var(--primary-hover);
+  border: 1px solid rgba(139, 92, 246, 0.3);
+  background: rgba(139, 92, 246, 0.08);
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-size: 0.85rem;
+}
+
+.heroTitle {
+  font-size: clamp(2.6rem, 7vw, 5.5rem);
+  line-height: 1.06;
+  margin-top: 26px;
+}
+
+.gradient {
+  display: block;
+  color: var(--primary-hover);
+}
+
+.heroSub {
+  max-width: 680px;
+  margin: 24px auto 30px;
+  color: var(--text-secondary);
+  font-size: 1.1rem;
+  line-height: 1.8;
+}
+
+.heroCtas {
+  justify-content: center;
+}
+
+.features {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 22px;
+  padding-bottom: 80px;
+}
+
+.featureCard {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--border-radius);
+  padding: 28px;
+}
+
+.featureCard p {
+  color: var(--text-secondary);
+  margin-top: 10px;
+  line-height: 1.65;
+}
+
+.footer {
+  min-height: 76px;
+  border-top: 1px solid var(--glass-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: var(--text-muted);
+}
+
+.footerLogo {
+  color: var(--text-secondary);
+  font-weight: 800;
+}
+
+@media (max-width: 800px) {
+  .features { grid-template-columns: 1fr; }
+  .navLink { display: none; }
+}

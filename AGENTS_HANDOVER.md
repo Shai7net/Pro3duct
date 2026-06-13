@@ -103,3 +103,13 @@ This single command builds and starts:
 - לסגירת שירותי הרקע יש ללחוץ על `סגירת Pro3duct.bat` או על `stop_pro3duct.bat`.
 - בדיקת משגר ללא פתיחת חלונות: `powershell -STA -File .\Pro3duct_Launcher.ps1 -ValidateOnly`.
 - הוראות פשוטות למשתמש נמצאות בקובץ `הוראות הפעלה.md`.
+
+# Real 3D Generation Update - June 2026
+
+- The generation pipeline no longer silently creates a fake GLB by default.
+- Real image-to-3D generation uses Meshy Multi-Image to 3D.
+- Source project images are loaded from local object storage, normalized to JPEG/PNG Data URI inputs, sent to Meshy, downloaded as a real GLB, then stored back locally.
+- A Meshy key can come from `MESHY_API_KEY` or from the tenant BYOK credentials screen.
+- The editor and embed viewer load the generated GLB through `/api/v1/digital-twins/{id}/model.glb`.
+- If no Meshy key is configured, generation stops with a clear error instead of showing a demo model.
+- The GitHub-per-product publishing idea is documented in `docs/GITHUB_PRODUCT_PUBLISHING.md`; implementation still needs GitHub token storage and a Pages publishing service.

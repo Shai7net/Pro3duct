@@ -1,0 +1,123 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: pro3duct
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres
+  namespace: pro3duct
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:16-alpine
+          env:
+            - name: POSTGRES_USER
+              value: pro3duct
+            - name: POSTGRES_PASSWORD
+              value: pro3duct_dev
+            - name: POSTGRES_DB
+              value: pro3duct
+          ports:
+            - containerPort: 5432
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres
+  namespace: pro3duct
+spec:
+  ports:
+    - port: 5432
+  selector:
+    app: postgres
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend
+  namespace: pro3duct
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: backend
+  template:
+    metadata:
+      labels:
+        app: backend
+    spec:
+      containers:
+        - name: backend
+          image: pro3duct-backend:latest
+          env:
+            - name: DATABASE_URL
+              value: "postgresql+asyncpg://pro3duct:pro3duct_dev@postgres:5432/pro3duct"
+            - name: DATABASE_SYNC_URL
+              value: "postgresql://pro3duct:pro3duct_dev@postgres:5432/pro3duct"
+            - name: REDIS_URL
+              value: "redis://redis:6379/0"
+            - name: S3_ENDPOINT
+              value: "http://minio:9000"
+            - name: TEMPORAL_HOST
+              value: "temporal:7233"
+            - name: ENCRYPTION_KEY
+              value: "32_bytes_long_encryption_key_here_!!!!"
+          ports:
+            - containerPort: 8000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend
+  namespace: pro3duct
+spec:
+  ports:
+    - port: 8000
+  selector:
+    app: backend
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend
+  namespace: pro3duct
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: frontend
+  template:
+    metadata:
+      labels:
+        app: frontend
+    spec:
+      containers:
+        - name: frontend
+          image: pro3duct-frontend:latest
+          env:
+            - name: NEXT_PUBLIC_API_URL
+              value: "http://backend:8000/api/v1"
+          ports:
+            - containerPort: 3000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend
+  namespace: pro3duct
+spec:
+  ports:
+    - port: 3000
+  selector:
+    app: frontend
